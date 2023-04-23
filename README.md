@@ -34,11 +34,19 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
-## Prisma
-
+## Prisma (ORM)
 ```bash
-# create migration from schema file
-$ npx prisma migrate dev --name MIGRATION_NAME
+# IDE for your database
+$ npx prisma studio 
+
+# run migrations (apply schema changes)
+$ npx prisma migrate dev # --name YOUR_MIGRATION_NAME
+
+# run migrations on CI/CD
+$ npx prisma migrate deploy
+
+# apply db schema changes to the prisma client
+$ npx prisma generate
 
 # production mode
 $ npm run start:prod
