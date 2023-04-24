@@ -15,8 +15,8 @@ import { UserService } from './user.service';
 import { Role, User } from '@prisma/client';
 import { CreateUserDto, ResponseUserDto, UpdateUserDto } from './dto/user.dto';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { Roles } from 'src/auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 const userCanOnlyHandleHisDataValidation = (user, id) => {
   if (user.role === Role.USER && user.id !== id) {
