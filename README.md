@@ -52,3 +52,9 @@ $ npx prisma generate
 # production mode
 $ npm run start:prod
 ```
+
+## Swagger UI
+```bash
+# here is the Swagger UI where you can check API Doc
+$ http://localhost:3000/api
+```
