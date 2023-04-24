@@ -1,29 +1,38 @@
 import { AuthService } from './auth.service';
 
-import { Body, Controller, Post, Response } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Response,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { User } from '@prisma/client';
-
-// import { JWT_EXPIRY_SECONDS } from '../../shared/constants/global.constants';
-const JWT_EXPIRY_SECONDS = 100000;
 import { AuthResponseDto, LoginUserDto, RegisterUserDto } from './dto/auth.dto';
+import { LocalAuthGuard } from './guards/local-auth.guard';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
+@ApiTags('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
+  @UseGuards(LocalAuthGuard)
   @ApiOperation({ description: 'Login user' })
-  // @ApiBody({ type: LoginUserDto })
   @ApiResponse({ type: AuthResponseDto })
   async login(
     @Body() user: LoginUserDto,
+    @Request() req,
     @Response() res,
-  ): Promise<AuthResponseDto> {
-    const loginData = await this.authService.login(user);
-
+  ): Promise<any> {
+    const loginData = await this.authService.login(req.user);
     res.cookie('accessToken', loginData.accessToken, {
-      expires: new Date(new Date().getTime() + JWT_EXPIRY_SECONDS * 1000),
+      expires: new Date(
+        new Date().getTime() + Number(process.env.COOKIE_EXPIRES_IN),
+      ),
       sameSite: 'strict',
       secure: true,
       httpOnly: true,
@@ -38,6 +47,7 @@ export class AuthController {
   }
 
   @Post('logout')
+  @UseGuards(JwtAuthGuard)
   logout(@Response() res): void {
     res.clearCookie('accessToken');
     res.status(200).send({ success: true });
