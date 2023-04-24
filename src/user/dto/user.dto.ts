@@ -24,7 +24,7 @@ export class CreateUserDto implements Prisma.UserCreateInput {
 
 export class UpdateUserDto extends PartialType(CreateUserDto) {}
 
-export class ResponseUserDto {
+export class ResponseUserDto implements Omit<User, 'password'> {
   @ApiProperty()
   id: number;
   @ApiProperty()
