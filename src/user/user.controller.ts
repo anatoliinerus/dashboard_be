@@ -1,5 +1,6 @@
 import {
   Body,
+  ClassSerializerInterceptor,
   Controller,
   Delete,
   ForbiddenException,
@@ -10,6 +11,7 @@ import {
   Post,
   Request,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { Role, User } from '@prisma/client';
@@ -19,12 +21,13 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 
 const userCanOnlyHandleHisDataValidation = (user, id) => {
-  if (user.role === Role.USER && user.id !== id) {
-    throw new ForbiddenException();
+  if (user.role !== Role.ADMIN) {
+    if (user.id !== id) throw new ForbiddenException();
   }
 };
 
 @ApiTags('users')
+@UseInterceptors(ClassSerializerInterceptor)
 @Controller('users')
 export class UserController {
   constructor(private userService: UserService) {}
@@ -69,8 +72,14 @@ export class UserController {
     @Request() req,
   ): Promise<User> {
     userCanOnlyHandleHisDataValidation(req.user, id);
+    let data = updateUserData;
 
-    return this.userService.updateUser({ id }, updateUserData);
+    if (req.user.role !== Role.ADMIN) {
+      const { role, ...safeFields } = updateUserData;
+      data = safeFields;
+    }
+
+    return this.userService.updateUser({ id }, data);
   }
 
   @Delete(':id')

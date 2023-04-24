@@ -1,8 +1,7 @@
-import { Exclude } from 'class-transformer';
-import { IsEmail, IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsEnum, IsString } from 'class-validator';
 import { Prisma, Role, User } from '@prisma/client';
-import { PartialType } from '@nestjs/mapped-types';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, PartialType } from '@nestjs/swagger';
+import { Exclude } from 'class-transformer';
 
 export class CreateUserDto implements Prisma.UserCreateInput {
   @IsEmail()
@@ -33,4 +32,10 @@ export class ResponseUserDto implements Omit<User, 'password'> {
   name: string;
   @ApiProperty()
   role: Role;
+  @Exclude()
+  password: string;
+
+  constructor(partial: Partial<User>) {
+    Object.assign(this, partial);
+  }
 }
