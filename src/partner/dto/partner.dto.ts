@@ -1,16 +1,15 @@
 import {
   IsEmail,
-  IsEnum,
   IsNumber,
   IsObject,
   IsOptional,
   IsString,
 } from 'class-validator';
-import { Prisma, Role, User } from '@prisma/client';
+import { Partner, Prisma } from '@prisma/brave';
 import { ApiProperty, PartialType } from '@nestjs/swagger';
-import { Exclude, Transform } from 'class-transformer';
+import { Transform } from 'class-transformer';
 
-export class CreateUserDto implements Prisma.UserCreateInput {
+export class CreatePartnerDto implements Prisma.PartnerCreateInput {
   @IsEmail()
   @ApiProperty()
   email: string;
@@ -19,22 +18,22 @@ export class CreateUserDto implements Prisma.UserCreateInput {
   @ApiProperty()
   name: string;
 
-  @IsEnum(Role)
+  @IsString()
   @ApiProperty()
-  role: Role;
+  phone: string;
 
   @IsString()
   @ApiProperty()
-  password: string;
+  comment: string;
 
   @IsString()
   @ApiProperty()
-  partnerId: number;
+  payment_terms: string;
 }
 
-export class UpdateUserDto extends PartialType(CreateUserDto) {}
+export class UpdatePartnerDto extends PartialType(CreatePartnerDto) {}
 
-export class ResponseUserDto implements Omit<User, 'password'> {
+export class ResponsePartnerDto implements Partner {
   @ApiProperty()
   id: number;
   @ApiProperty()
@@ -42,33 +41,33 @@ export class ResponseUserDto implements Omit<User, 'password'> {
   @ApiProperty()
   name: string;
   @ApiProperty()
-  role: Role;
+  phone: string;
   @ApiProperty()
-  partnerId: number;
-  @Exclude()
-  password: string;
-
-  constructor(partial: Partial<User>) {
-    Object.assign(this, partial);
-  }
+  comment: string;
+  @ApiProperty()
+  payment_terms: string;
 }
 
-export class GetUsersParams {
+export class GetPartnersParams {
+  @IsOptional()
   @Transform(({ value }) => Number(value))
   @IsNumber()
   @ApiProperty()
   limit: number;
 
+  @IsOptional()
   @Transform(({ value }) => Number(value))
   @IsNumber()
   @ApiProperty()
   page: string;
 
+  @IsOptional()
   @Transform(({ value }) => Number(value))
   @IsNumber()
   @ApiProperty()
   offset: string;
 
+  @IsOptional()
   @Transform(({ value }) => {
     const [field, type] = value[0].split(',');
     return { [field]: type.toLowerCase() };
@@ -78,6 +77,7 @@ export class GetUsersParams {
   sort: object;
 
   @IsOptional()
+  @IsOptional()
   @ApiProperty()
   queryParams: string;
 
@@ -86,6 +86,14 @@ export class GetUsersParams {
     const parsedValues = value
       .map((v) => v.split('||'))
       .reduce((acc, cur) => {
+        if (cur[1] === '$in') {
+          return {
+            ...acc,
+            [cur[0].toLowerCase()]: {
+              in: cur[2].split(',').map((v) => Number(v)),
+            },
+          };
+        }
         return { ...acc, [cur[0].toLowerCase()]: cur[2] };
       }, {});
 

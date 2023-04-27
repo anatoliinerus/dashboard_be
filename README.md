@@ -49,6 +49,9 @@ $ npx prisma migrate deploy
 # apply db schema changes to the prisma client
 $ npx prisma generate
 
+# generate schemas for multiple db connections
+$ npx prisma generate --schema prisma/schema1.prisma && npx prisma generate --schema prisma/schema2.prisma
+
 # production mode
 $ npm run start:prod
 ```
