@@ -1,6 +1,5 @@
 import {
   Body,
-  ClassSerializerInterceptor,
   Controller,
   Delete,
   ForbiddenException,
@@ -9,13 +8,18 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Request,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { Role, User } from '@prisma/client';
-import { CreateUserDto, ResponseUserDto, UpdateUserDto } from './dto/user.dto';
+import {
+  CreateUserDto,
+  GetUsersParams,
+  ResponseUserDto,
+  UpdateUserDto,
+} from './dto/user.dto';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -27,7 +31,6 @@ const userCanOnlyHandleHisDataValidation = (user, id) => {
 };
 
 @ApiTags('users')
-@UseInterceptors(ClassSerializerInterceptor)
 @Controller('users')
 export class UserController {
   constructor(private userService: UserService) {}
@@ -36,8 +39,27 @@ export class UserController {
   @Roles(Role.ADMIN)
   @UseGuards(JwtAuthGuard)
   @ApiResponse({ type: ResponseUserDto, isArray: true })
-  async getUsers(): Promise<User[]> {
-    return this.userService.getUsers({});
+  async getUsers(@Query() query: GetUsersParams): Promise<any> {
+    const findUserParams: any = {};
+    if (query.limit) findUserParams.take = query.limit;
+    if (query.offset) findUserParams.skip = query.offset;
+    if (query.sort) findUserParams.orderBy = query.sort;
+    if (query.queryParams) {
+      findUserParams.where = {
+        OR: [
+          { id: Number(query.queryParams) ? Number(query.queryParams) : {} },
+          { email: { contains: query.queryParams } },
+        ],
+        ...query.filter,
+      };
+    }
+    if (query.filter) {
+      findUserParams.where = { ...findUserParams.where, ...query.filter };
+    }
+
+    const [data, total] = await this.userService.getUsers(findUserParams);
+
+    return { data, total };
   }
 
   @Get(':id')

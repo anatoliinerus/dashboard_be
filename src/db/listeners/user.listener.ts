@@ -9,6 +9,8 @@ export class UserListener {
       if (params.action === 'create' || params.action === 'update') {
         const password = params.args['data'].password;
 
+        if (!password) return next(params);
+
         const encryptedPass = await AuthHelpers.hash(password);
 
         params.args['data'] = {
